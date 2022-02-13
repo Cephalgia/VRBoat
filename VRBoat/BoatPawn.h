@@ -72,4 +72,11 @@ protected:
 	float RotationSpeedCached = 0.f;
 	
 	float VelocityLerpAlpha = 0.f;
+
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	void GripLeft() { LeftController->Grab(Paddle); }
+	void GripRight() { RightController->Grab(Paddle); }
+	void ReleaseLeft() { LeftController->Release(Paddle); }
+	void ReleaseRight() { RightController->Release(Paddle); }
 };

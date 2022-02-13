@@ -3,9 +3,9 @@
 #include "VRBoat.h"
 
 #include "GameFramework/Actor.h"
-#include "Components/StaticMeshComponent.h"
-
 #include "PlayerMotionController.h"
+
+#include "GrabbableMeshComponent.h"
 
 #include "PaddleActor.generated.h"
 
@@ -22,7 +22,11 @@ public:
 	FVector GetInputVelocity() const { return DeltaMove; }
 	FVector GetRelevantPaddleLocation() const { return PaddleLocationPrev; }
 
-	UStaticMeshComponent* GetPaddleMesh() const;
+	void AttachPaddleMesh(USceneComponent * InComponent, FName InSocketName);
+	void DetachPaddleMesh();
+	void AttachToDefaultComp();
+
+	UGrabbableMeshComponent* GetPaddleMesh() const { return PaddleMesh; }
 
 	UPROPERTY()
 	APlayerMotionController * LeftController = nullptr;
@@ -30,9 +34,14 @@ public:
 	UPROPERTY()
 	APlayerMotionController * RightController = nullptr;
 
+	UPROPERTY()
+	USceneComponent * DefaultParentComponent = nullptr;
+
+	bool bHeld = false;
+
 protected:
 	UPROPERTY(EditAnywhere)
-	UStaticMeshComponent * PaddleMesh = nullptr;
+	UGrabbableMeshComponent * PaddleMesh = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	USceneComponent * RootComp = nullptr;
@@ -40,4 +49,6 @@ protected:
 	FVector PaddleLocationPrev = FVector::ZeroVector;
 	bool bPrevPaddleRight = false;
 	FVector DeltaMove = FVector::ZeroVector;
+
+	FVector ToPaddle = FVector::ZeroVector;
 };

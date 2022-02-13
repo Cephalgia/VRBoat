@@ -18,8 +18,6 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "HandSettings")
 	bool bIsLeft = false;
 
-	void MakeLeftHand();
-
 protected:
 	UPROPERTY(EditAnywhere)
 	USkeletalMeshComponent * HandMesh = nullptr;

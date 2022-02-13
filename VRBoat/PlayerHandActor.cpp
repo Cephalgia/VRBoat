@@ -11,8 +11,3 @@ APlayerHandActor::APlayerHandActor()
 	HandMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("Hand Mesh"));
 	HandMesh->SetupAttachment(Origin);
 }
-
-void APlayerHandActor::MakeLeftHand()
-{
-	HandMesh->SetRelativeScale3D(FVector(0.f, 0.f, -1.f));
-}

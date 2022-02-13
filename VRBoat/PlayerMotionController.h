@@ -11,6 +11,8 @@
 
 #include "PlayerMotionController.generated.h"
 
+class APaddleActor;
+
 UCLASS(config = Game)
 class VRBOAT_API APlayerMotionController : public AActor
 {
@@ -29,6 +31,12 @@ public:
 	float GetControllerYRotation() const;
 
 	void AttachHandTo(USceneComponent * InComponent, FName InSocketName);
+	void DetachHand();
+
+	void Grab(APaddleActor * InPaddle);
+	void Release(APaddleActor * InPaddle);
+
+	bool IsHolding() const { return bHolding; }
 
 protected:
 	UPROPERTY(EditAnywhere)
@@ -44,4 +52,6 @@ protected:
 	TSoftClassPtr<APlayerHandActor> RightHandActorClass;
 	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<APlayerHandActor> LeftHandActorClass;
+
+	bool bHolding = false;
 };
