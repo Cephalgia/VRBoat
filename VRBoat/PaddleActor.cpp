@@ -66,37 +66,50 @@ void APaddleActor::Tick(float DeltaTime)
 	if (PaddleMesh->GetRelativeRotation() == FRotator::ZeroRotator)
 	{
 		PaddleMesh->SetRelativeRotation(FRotator(30.f, -90.f, 0.f));
+		
 	}
 	ToPaddle = FVector::ZeroVector;
 
 	FVector RightLocation = RightController->GetControllerLocation();
 	FVector LeftLocation = LeftController->GetControllerLocation();
 
+	FVector HandsMidPoint = PaddleMesh->GetHandsMidPoint();
+	FVector ToHands = HandsMidPoint - GetActorLocation();
 	//hand rotations apply only to Y axis
-
-	// handle holding with 1 hand
-
 	// find middle point between hands
-	FVector MiddlePoint = (RightLocation + LeftLocation) / 2;
+	FVector MiddlePoint = (RightLocation + LeftLocation) / 2.f /*- ToHands*/;
 	// find rotation
 	FVector HandsVector = (RightLocation - LeftLocation).GetSafeNormal();
 	FRotator FinalRotator = HandsVector.ToOrientationRotator();
 	
 	FinalRotator.Roll = FMath::UnwindDegrees(-RightController->GetControllerYRotation());
 
-	if (FinalRotator.Roll < 1.f)
+	/*if (FinalRotator.Roll < 1.f)
 	{
 		DrawDebugSphere(GetWorld(), MiddlePoint, 5.f, 8, FColor::Red);
-	}
+	}*/
 
-	SetActorLocationAndRotation(MiddlePoint, FinalRotator.Quaternion());
-
-	DeltaMove = FVector::ZeroVector;
 	// The rotation should matter too
 	FVector RightPaddleLocation = PaddleMesh->GetSocketLocation("PaddleWater_R");
 	FVector LeftPaddleLocation = PaddleMesh->GetSocketLocation("PaddleWater_L");
 
 	if (RightPaddleLocation.Z < 0.f || LeftPaddleLocation.Z < 0.f)
+	{
+		CurrentRotationLerpAlpha = 0.05f;
+	}
+	else
+	{
+		CurrentRotationLerpAlpha = FMath::Lerp(CurrentRotationLerpAlpha, 1.f, 0.05f);
+	}
+
+	FRotator PrevRotation = GetActorRotation();
+	FinalRotator = FMath::Lerp(PrevRotation, FinalRotator, CurrentRotationLerpAlpha);
+
+	SetActorLocationAndRotation(MiddlePoint, FinalRotator.Quaternion());
+
+	DeltaMove = FVector::ZeroVector;
+
+	if (RightPaddleLocation.Z < 0.f || LeftPaddleLocation.Z < 0.f) // what if they both are
 	{
 		bool bPaddleRight = RightPaddleLocation.Z < 0.f;
 		if (bPaddleRight != bPrevPaddleRight)
@@ -105,12 +118,18 @@ void APaddleActor::Tick(float DeltaTime)
 			PaddleLocationPrev = FVector::ZeroVector;
 			return;
 		}
+
+		if (PaddleLocationPrev == FVector::ZeroVector)
+		{
+			UGameplayStatics::PlaySoundAtLocation(this, PaddleSounds[FMath::RandRange(0, PaddleSounds.Num() - 1)], bPaddleRight ? RightPaddleLocation : LeftPaddleLocation);
+		}
+
 		FVector RelevantPaddleLocation = RightPaddleLocation.Z < 0.f ? RightPaddleLocation : LeftPaddleLocation;
 		if (PaddleLocationPrev != FVector::ZeroVector)
 		{
 			DeltaMove = RelevantPaddleLocation - PaddleLocationPrev;
 			DeltaMove.Z = 0;
-			DeltaMove = -(DeltaMove*0.7f)/* / DeltaTime*/; //0.7 is sort of water resistance
+			DeltaMove = -(DeltaMove/**0.7f*/); //0.7 is sort of water resistance
 		}
 
 		bPrevPaddleRight = bPaddleRight;

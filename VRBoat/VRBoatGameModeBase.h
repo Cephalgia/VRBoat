@@ -6,6 +6,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "VRBoatGameModeBase.generated.h"
 
+class ABoatExitPoint;
 /**
  * 
  */
@@ -13,5 +14,9 @@ UCLASS()
 class VRBOAT_API AVRBoatGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+
+public:
+
+	UPROPERTY()
+	TArray<ABoatExitPoint*> ExitPoints;
 };

@@ -47,8 +47,34 @@ void ARiverSplineActor::BeginPlay()
 
 FVector ARiverSplineActor::GetRiverFlow(FVector InLocation) const
 {
-	USplineComponent * ClosestSpline = nullptr;
 	float Distance = 0.f;
+	USplineComponent * ClosestSpline = GetClosestSpline(InLocation, Distance);
+	
+	if (ClosestSpline)
+	{
+		return ClosestSpline->FindDirectionClosestToWorldLocation(InLocation, ESplineCoordinateSpace::World) * DistanceToFlowCurve->GetFloatValue(Distance);;
+	}
+
+	return FVector::ZeroVector;
+}
+
+FVector ARiverSplineActor::GetClosestPoint(FVector InLocation) const
+{
+	float Distance = 0.f;
+	USplineComponent * ClosestSpline = GetClosestSpline(InLocation, Distance);
+
+	if (ClosestSpline)
+	{
+		return ClosestSpline->FindLocationClosestToWorldLocation(InLocation, ESplineCoordinateSpace::World);
+	}
+
+	return FVector::ZeroVector;
+}
+
+USplineComponent* ARiverSplineActor::GetClosestSpline(FVector InLocation, float& OutDistance) const
+{
+	USplineComponent * ClosestSpline = nullptr;
+	OutDistance = 0.f;
 	FVector Point;
 	if (CurrentSplineIndex == -1)
 	{
@@ -61,7 +87,7 @@ FVector ARiverSplineActor::GetRiverFlow(FVector InLocation) const
 			{
 				MinCurveDistance = CurrentDistance;
 				ClosestSpline = Spline.Spline;
-				Distance = CurrentDistance;
+				OutDistance = CurrentDistance;
 				Point = ClosestPoint;
 			}
 		}
@@ -81,17 +107,12 @@ FVector ARiverSplineActor::GetRiverFlow(FVector InLocation) const
 			{
 				MinCurveDistance = CurrentDistance;
 				ClosestSpline = Spline;
-				Distance = CurrentDistance;
+				OutDistance = CurrentDistance;
 				Point = ClosestPoint;
 			}
 		}
 
 	}
-	
-	if (ClosestSpline)
-	{
-		return ClosestSpline->FindDirectionClosestToWorldLocation(InLocation, ESplineCoordinateSpace::World) * DistanceToFlowCurve->GetFloatValue(Distance);;
-	}
 
-	return FVector::ZeroVector;
+	return ClosestSpline;
 }

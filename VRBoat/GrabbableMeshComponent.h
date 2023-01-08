@@ -20,6 +20,8 @@ public:
 
 	void SetSocketTransform(FName InSocketName, FTransform InWorldTransform);
 
+	FVector GetHandsMidPoint() const;
+
 protected:
 	TMap<FName, FTransform> SocketNewTransforms;
 

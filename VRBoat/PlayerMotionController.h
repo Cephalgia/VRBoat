@@ -28,6 +28,8 @@ public:
 	void SetMotionSource(FName SourceName);
 
 	FVector GetControllerLocation() const;
+	FVector GetControllerForwardVector() const;
+	FRotator GetControllerRotation() const;
 	float GetControllerYRotation() const;
 
 	void AttachHandTo(USceneComponent * InComponent, FName InSocketName);

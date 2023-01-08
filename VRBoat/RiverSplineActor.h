@@ -36,6 +36,8 @@ public:
 
 	FVector GetRiverFlow(FVector InLocation) const;
 
+	FVector GetClosestPoint(FVector InLocation) const;
+
 protected:
 	UPROPERTY(Transient)
 	TArray<FSplineSection> RiverSplines;
@@ -44,4 +46,6 @@ protected:
 	UCurveFloat * DistanceToFlowCurve = nullptr;
 
 	int32 CurrentSplineIndex = -1;
+
+	USplineComponent* GetClosestSpline(FVector InLocation, float& OutDistance) const;
 };

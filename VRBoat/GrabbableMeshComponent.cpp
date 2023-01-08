@@ -46,10 +46,29 @@ FTransform UGrabbableMeshComponent::GetSocketTransform(FName InSocketName, ERela
 	}
 	else if (InSocketName != NAME_None)
 	{
-		if (const FTransform* SocketTransform = SocketNewTransforms.Find(InSocketName)) // only for RTS_World
+		const FTransform* SocketTransform = SocketNewTransforms.Find(InSocketName);
+		if (SocketTransform)
 		{
-			return FTransform(SocketTransform->GetRotation(), SocketTransform->GetLocation(), SocketTransform->GetScale3D()) * GetComponentTransform();
-		}
+			switch (TransformSpace)
+			{
+				case RTS_World:
+				{
+					return *SocketTransform * GetComponentTransform();
+				}
+				case RTS_Actor:
+				{
+					if (const AActor* Actor = GetOwner())
+					{
+						return (*SocketTransform * GetComponentTransform()).GetRelativeTransform(GetOwner()->GetTransform());
+					}
+					break;
+				}
+				case RTS_Component:
+				{
+					return *SocketTransform;
+				}
+			}
+		}		
 	}
 
 	return Super::GetSocketTransform(InSocketName, TransformSpace);
@@ -78,10 +97,20 @@ void UGrabbableMeshComponent::SetSocketTransform(FName InSocketName, FTransform 
 	if (MarkerSockets.Num() == 2)
 	{
 		FVector TubePoint = FMath::ClosestPointOnSegment(InWorldTransform.GetLocation(), MarkerSockets[0].GetLocation(), MarkerSockets[1].GetLocation());
-		DrawDebugLine(GetWorld(), MarkerSockets[0].GetLocation(), MarkerSockets[1].GetLocation(), FColor::Red, false, 10.f);
-		DrawDebugSphere(GetWorld(), InWorldTransform.GetLocation(), 10.f, 8, FColor::Red, false, 10.f);
-		DrawDebugSphere(GetWorld(), TubePoint, 10.f, 8, FColor::Blue, false, 10.f);
+		//DrawDebugLine(GetWorld(), MarkerSockets[0].GetLocation(), MarkerSockets[1].GetLocation(), FColor::Red, false, 10.f);
+		//DrawDebugSphere(GetWorld(), InWorldTransform.GetLocation(), 10.f, 8, FColor::Red, false, 10.f);
+		//DrawDebugSphere(GetWorld(), TubePoint, 10.f, 8, FColor::Blue, false, 10.f);
 		FTransform SocketTransform = FTransform(MarkerSockets[0].GetRotation(), TubePoint, MarkerSockets[0].GetScale3D());
 		SocketNewTransforms.Add(InSocketName, SocketTransform.GetRelativeTransform(GetComponentTransform()));
 	}
+}
+
+FVector UGrabbableMeshComponent::GetHandsMidPoint() const
+{
+	FVector LeftHand = GetSocketTransform("Handle_L", RTS_World).GetLocation();
+	FVector RightHand = GetSocketTransform("Handle_R", RTS_World).GetLocation();
+
+	FVector MidPoint = (LeftHand + RightHand) / 2.f;
+
+	return MidPoint;
 }

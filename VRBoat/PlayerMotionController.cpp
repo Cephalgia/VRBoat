@@ -60,6 +60,16 @@ FVector APlayerMotionController::GetControllerLocation() const
 	return MotionControllerComp->GetComponentLocation();
 }
 
+FVector APlayerMotionController::GetControllerForwardVector() const
+{
+	return MotionControllerComp->GetComponentRotation().Vector();
+}
+
+FRotator APlayerMotionController::GetControllerRotation() const
+{
+	return MotionControllerComp->GetComponentRotation();
+}
+
 float APlayerMotionController::GetControllerYRotation() const
 {
 	return MotionControllerComp->GetComponentRotation().Roll;
@@ -83,8 +93,8 @@ void APlayerMotionController::Grab(APaddleActor * InPaddle)
 	bool bFoundDistance = Capsule->GetSquaredDistanceToCollision(PlayerHandActor->GetActorLocation(), DistSq, ClosestPoint);
 	if (Capsule && !bHolding && bFoundDistance && DistSq < FMath::Square(10.f))
 	{
-		DrawDebugSphere(GetWorld(), ClosestPoint, 5.f, 8, FColor::Green, true);
-		DrawDebugLine(GetWorld(), ClosestPoint, PlayerHandActor->GetActorLocation(), FColor::Green, true);
+		//DrawDebugSphere(GetWorld(), ClosestPoint, 5.f, 8, FColor::Green, true);
+		//DrawDebugLine(GetWorld(), ClosestPoint, PlayerHandActor->GetActorLocation(), FColor::Green, true);
 		bHolding = true;
 		if (!InPaddle->bHeld)
 		{

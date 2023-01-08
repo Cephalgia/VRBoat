@@ -21,6 +21,12 @@ class VRBOAT_API ABoatPawn : public APawn
 public:
 	ABoatPawn();
 
+	UPROPERTY()
+	APlayerMotionController * LeftController = nullptr;
+
+	UPROPERTY()
+	APlayerMotionController * RightController = nullptr;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
@@ -29,19 +35,16 @@ public:
 protected:
 
 	UPROPERTY(EditAnywhere)
-	UBoatCollisionComponent * VROrigin = nullptr;
+	UBoatCollisionComponent * BoatCollision = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	USceneComponent * VROrigin = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	UCameraComponent * VRCamera = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent * BoatMesh = nullptr;
-
-	UPROPERTY()
-	APlayerMotionController * LeftController = nullptr;
-
-	UPROPERTY()
-	APlayerMotionController * RightController = nullptr;
 
 	UPROPERTY()
 	APaddleActor * Paddle = nullptr;
@@ -61,11 +64,26 @@ protected:
 	UPROPERTY(EditAnywhere)
 	UCurveFloat * SpeedBlinkerCurve = nullptr;
 
+	UPROPERTY()
+	UAudioComponent* AudioComponentRight = nullptr;
+
+	UPROPERTY()
+	UAudioComponent* AudioComponentLeft = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* SoundRight = nullptr;
+
+	UPROPERTY(EditAnywhere, Category = "Sound")
+	USoundBase* SoundLeft = nullptr;
+
 	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<APlayerMotionController> MotionControllerClass;
 
 	UPROPERTY(EditAnywhere)
 	TSoftClassPtr<APaddleActor> PaddleClass;
+
+	UPROPERTY(EditAnywhere, meta = (AllowedClasses = "WalkingPawn"))
+	UClass* WalkingPawnClass = nullptr;
 
 	FVector Velocity = FVector::ZeroVector;
 	FVector LastRawVelocity = FVector::ZeroVector;
@@ -75,8 +93,14 @@ protected:
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	void GripLeft() { LeftController->Grab(Paddle); }
+	void GripLeft() { LeftController->Grab(Paddle); } //not just paddle!
 	void GripRight() { RightController->Grab(Paddle); }
 	void ReleaseLeft() { LeftController->Release(Paddle); }
 	void ReleaseRight() { RightController->Release(Paddle); }
+
+	void BoatExit();
+
+	void PlayRiverSound(FVector InFlow);
+
+	void PositionReset();
 };

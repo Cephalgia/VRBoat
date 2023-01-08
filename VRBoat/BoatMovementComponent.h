@@ -21,6 +21,10 @@ public:
 
 	virtual void BeginPlay() override;
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction) override;
+	virtual float SlideAlongSurface(const FVector& Delta, float Time, const FVector& Normal, FHitResult &Hit, bool bHandleImpact = false) override;
+
+	FVector GetRiverFlow() const;
+	ARiverSplineActor* GetRiverSpline() const { return RiverSplineActor; }
 
 	UPROPERTY()
 	APaddleActor * Paddle = nullptr;
@@ -28,7 +32,6 @@ public:
 	FVector AngularVelocity;
 
 protected:
-	//FVector ToPaddle = FVector::ZeroVector;
 
 	FVector LastRawVelocity = FVector::ZeroVector;
 	float RotationSpeedCached = 0.f;
@@ -37,6 +40,4 @@ protected:
 
 	UPROPERTY()
 	ARiverSplineActor * RiverSplineActor = nullptr;
-
-	FVector GetRiverFlow() const;
 };
