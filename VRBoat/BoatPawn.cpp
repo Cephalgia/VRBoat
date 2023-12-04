@@ -48,12 +48,17 @@ void ABoatPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if (MaterialInterface)
+	if (AVRBoatGameModeBase * GameMode = Cast<AVRBoatGameModeBase>(GetWorld()->GetAuthGameMode()))
+	{
+		GameMode->BoatPawn = this;
+	}
+
+	/*if (MaterialInterface)
 	{
 		DynamicMaterial = UMaterialInstanceDynamic::Create(MaterialInterface, this);
 		DynamicMaterial->SetScalarParameterValue(TEXT("BlinkerRadius"), 1.f);
 		PostProcessComponent->Settings.WeightedBlendables.Array.Add(FWeightedBlendable(1.f, DynamicMaterial));
-	}
+	}*/
 
 	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Eye);
 
@@ -99,8 +104,8 @@ void ABoatPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	DrawDebugSphere(GetWorld(), AudioComponentRight->GetComponentLocation(), 5.f, 8, FColor::Red, false, 0.7f);
-	DrawDebugSphere(GetWorld(), AudioComponentLeft->GetComponentLocation(), 5.f, 8, FColor::Red, false, 0.7f);
+	//DrawDebugSphere(GetWorld(), AudioComponentRight->GetComponentLocation(), 5.f, 8, FColor::Red, false, 0.7f);
+	//DrawDebugSphere(GetWorld(), AudioComponentLeft->GetComponentLocation(), 5.f, 8, FColor::Red, false, 0.7f);
 }
 
 void ABoatPawn::ReceivePaddleDelta(FVector DeltaMove, float DeltaTime)
@@ -140,14 +145,51 @@ void ABoatPawn::BoatExit()
 			if (UNavigationSystemV1* NavSys = UNavigationSystemV1::GetNavigationSystem(this))
 			{
 				FNavLocation Result;
-				if (NavSys->ProjectPointToNavigation(Point->GetActorLocation(), Result, FVector(50.f, 50.f, 50.f)))
+				if (NavSys->ProjectPointToNavigation(Point->GetActorLocation(), Result, FVector(100.f, 100.f, 100.f)))
 				{
-					AWalkingPawn * WalkingPawn = GetWorld()->SpawnActor<AWalkingPawn>(WalkingPawnClass, FTransform(Result.Location));
-					GetController()->Possess(WalkingPawn);
+					if (Paddle->bHeld)
+					{
+						RightController->DetachHand();
+						LeftController->DetachHand();
+						Paddle->AttachToDefaultComp();
+					}
+
+					if (!GameMode->WalkingPawn)
+					{
+						AWalkingPawn * WalkingPawn = GetWorld()->SpawnActor<AWalkingPawn>(WalkingPawnClass, FTransform(Result.Location));
+						GameMode->WalkingPawn = WalkingPawn;
+					}
+					else
+					{
+						GameMode->WalkingPawn->SetActorLocation(Result.Location);
+					}
+					GetController()->Possess(GameMode->WalkingPawn);
+					GameMode->WalkingPawn->OnPossessed();
+
+					BoatMovementComp->bStopMovement = true;
+					SetActorLocationAndRotation(Point->BoatStayPoint->GetComponentLocation(), Point->BoatStayPoint->GetComponentRotation().Quaternion());
 				}
 			}
 		}
 	}
+}
+
+void ABoatPawn::OnPossessed()
+{
+	BoatMovementComp->bStopMovement = false;
+
+	if (AVRBoatGameModeBase * GameMode = Cast<AVRBoatGameModeBase>(GetWorld()->GetAuthGameMode()))
+	{
+		if (AWalkingPawn * WalkingPawn = GameMode->WalkingPawn)
+		{
+			LeftController = WalkingPawn->LeftController;
+			RightController = WalkingPawn->RightController;
+
+			LeftController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::KeepRelative, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, false));
+			RightController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::KeepRelative, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, false));
+		}
+	}
+	PositionReset();
 }
 
 void ABoatPawn::PositionReset()

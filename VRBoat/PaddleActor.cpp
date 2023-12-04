@@ -156,6 +156,6 @@ void APaddleActor::DetachPaddleMesh()
 
 void APaddleActor::AttachToDefaultComp()
 {
-	PaddleMesh->AttachToComponent(DefaultParentComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepWorld, false), "Paddle");
+	PaddleMesh->AttachToComponent(DefaultParentComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, EAttachmentRule::SnapToTarget, EAttachmentRule::KeepRelative, false), "Paddle");
 	SetActorRotation(FRotator::ZeroRotator);
 }

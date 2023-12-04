@@ -1,4 +1,3 @@
-// Copyright 1998-2019 Epic Games, Inc. All Rights Reserved.
 
 using UnrealBuildTool;
 using System.Collections.Generic;
@@ -9,6 +8,6 @@ public class VRBoatEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 
-		ExtraModuleNames.AddRange( new string[] { "VRBoat" } );
+		ExtraModuleNames.AddRange( new string[] { "VRBoat", "VRBoatEditor" } );
 	}
 }

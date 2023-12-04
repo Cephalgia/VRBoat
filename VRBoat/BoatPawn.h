@@ -32,6 +32,8 @@ public:
 
 	void ReceivePaddleDelta(FVector DeltaMove, float DeltaTime);
 
+	void OnPossessed();
+
 protected:
 
 	UPROPERTY(EditAnywhere)

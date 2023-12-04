@@ -7,6 +7,8 @@
 #include "VRBoatGameModeBase.generated.h"
 
 class ABoatExitPoint;
+class AWalkingPawn;
+class ABoatPawn;
 /**
  * 
  */
@@ -19,4 +21,10 @@ public:
 
 	UPROPERTY()
 	TArray<ABoatExitPoint*> ExitPoints;
+
+	UPROPERTY()
+	AWalkingPawn * WalkingPawn = nullptr;
+
+	UPROPERTY()
+	ABoatPawn * BoatPawn = nullptr;
 };

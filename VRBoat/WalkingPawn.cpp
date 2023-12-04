@@ -11,8 +11,11 @@
 #include "Runtime/HeadMountedDisplay/Public/IHeadMountedDisplay.h"
 #include "../../../HeadMountedDisplay/Public/HeadMountedDisplayFunctionLibrary.h"
 #include "XRMotionControllerBase.h"
+#include "IXRTrackingSystem.h"
 
 #include "BoatPawn.h"
+#include "VRBoatGameModeBase.h"
+#include "BoatExitPoint.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -20,14 +23,17 @@ AWalkingPawn::AWalkingPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	VROrigin = CreateDefaultSubobject<UCapsuleComponent>(TEXT("VR Origin"));
-	VROrigin->SetupAttachment(GetRootComponent());
+	Capsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("Capsule"));
+	Capsule->SetupAttachment(GetRootComponent());
+
+	VROrigin = CreateDefaultSubobject<USceneComponent>(TEXT("VR Origin"));
+	VROrigin->SetupAttachment(Capsule);
 
 	VRCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("VR Camera"));
 	VRCamera->SetupAttachment(VROrigin);
 
 	TeleportIndicator = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Teleport Indicator"));
-	TeleportIndicator->SetupAttachment(VROrigin);
+	TeleportIndicator->SetupAttachment(Capsule);
 	TeleportIndicator->SetHiddenInGame(true);
 }
 
@@ -35,15 +41,14 @@ void AWalkingPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Floor);
+	UHeadMountedDisplayFunctionLibrary::SetTrackingOrigin(EHMDTrackingOrigin::Eye);
+}
 
-	FTransform SpawnTransform(FVector(0.f, 0.f, 0.f));
-
-	TArray<AActor*> Boat;
-	UGameplayStatics::GetAllActorsOfClass(this, ABoatPawn::StaticClass(), Boat);
-	if (Boat.Num() > 0)
+void AWalkingPawn::OnPossessed()
+{
+	if (AVRBoatGameModeBase * GameMode = Cast<AVRBoatGameModeBase>(GetWorld()->GetAuthGameMode()))
 	{
-		if (ABoatPawn * BoatPawn = Cast<ABoatPawn>(Boat[0]))
+		if (ABoatPawn * BoatPawn = GameMode->BoatPawn)
 		{
 			LeftController = BoatPawn->LeftController;
 			RightController = BoatPawn->RightController;
@@ -52,6 +57,8 @@ void AWalkingPawn::BeginPlay()
 			RightController->AttachToComponent(VROrigin, FAttachmentTransformRules(EAttachmentRule::KeepRelative, EAttachmentRule::KeepRelative, EAttachmentRule::KeepWorld, false));
 		}
 	}
+	PositionReset();
+	SetActorLocation(GetActorLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight()));
 }
 
 void AWalkingPawn::Tick(float DeltaTime)
@@ -73,7 +80,10 @@ void AWalkingPawn::Tick(float DeltaTime)
 				{
 					TeleportIndicator->SetHiddenInGame(false);
 					TeleportIndicator->SetWorldLocationAndRotation(Result.Location, FRotator(0.f, RightController->GetControllerRotation().Yaw, 0.f).Quaternion());
+					DrawDebugLine(GetWorld(), RightController->GetControllerLocation(), Result.Location, FColor::Red);
+					DrawDebugSphere(GetWorld(), Result.Location, 10.f, 8, FColor::Red);
 					CachedTeleportLocation = TeleportIndicator->GetComponentTransform();
+					CachedTeleportLocation.SetLocation(CachedTeleportLocation.GetLocation() + FVector(0.f, 0.f, Capsule->GetScaledCapsuleHalfHeight()));
 				}
 			}
 			else
@@ -95,6 +105,10 @@ void AWalkingPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	PlayerInputComponent->BindAction(TEXT("Teleport"), IE_Pressed, this, &AWalkingPawn::PreTeleport);
 	PlayerInputComponent->BindAction(TEXT("Teleport"), IE_Released, this, &AWalkingPawn::PostTeleport);
 	PlayerInputComponent->BindAction(TEXT("CancelTeleport"), IE_Released, this, &AWalkingPawn::CancelTeleport);
+
+	PlayerInputComponent->BindAction(TEXT("BoatExit"), IE_Pressed, this, &AWalkingPawn::BoatEnter);
+
+	PlayerInputComponent->BindAction(TEXT("PositionReset"), IE_Pressed, this, &AWalkingPawn::PositionReset);
 }
 
 void AWalkingPawn::PreTeleport()
@@ -109,6 +123,8 @@ void AWalkingPawn::PostTeleport()
 	{
 		TeleportIndicator->SetHiddenInGame(true);
 		TeleportIndicator->SetRelativeLocation(FVector::ZeroVector);
+
+		CachedTeleportLocation.SetRotation(FRotator(0.f, CachedTeleportLocation.Rotator().Yaw - VRCamera->GetRelativeRotation().Yaw, 0.f).Quaternion());
 
 		SetActorTransform(CachedTeleportLocation);
 		CachedTeleportLocation = FTransform::Identity;
@@ -125,4 +141,30 @@ void AWalkingPawn::CancelTeleport()
 		TeleportIndicator->SetHiddenInGame(true);
 		TeleportIndicator->SetRelativeLocation(FVector::ZeroVector);
 	}
+}
+
+void AWalkingPawn::BoatEnter()
+{
+	if (AVRBoatGameModeBase * GameMode = Cast<AVRBoatGameModeBase>(GetWorld()->GetAuthGameMode()))
+	{
+		ABoatExitPoint * Point = nullptr;
+		for (auto ExitPoint : GameMode->ExitPoints)
+		{
+			if ((GetActorLocation() - ExitPoint->GetActorLocation()).SizeSquared() < FMath::Square(300.f))
+			{
+				Point = ExitPoint;
+			}
+		}
+
+		if (Point)
+		{
+			GetController()->Possess(GameMode->BoatPawn);
+			GameMode->BoatPawn->OnPossessed();
+		}
+	}
+}
+
+void AWalkingPawn::PositionReset()
+{
+	UHeadMountedDisplayFunctionLibrary::ResetOrientationAndPosition();
 }

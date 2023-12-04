@@ -18,25 +18,30 @@ class VRBOAT_API AWalkingPawn : public APawn
 public:
 	AWalkingPawn();
 
+	UPROPERTY()
+	APlayerMotionController * LeftController = nullptr;
+
+	UPROPERTY()
+	APlayerMotionController * RightController = nullptr;
+
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
+
+	void OnPossessed();
 
 protected:
 
 	UPROPERTY(EditAnywhere)
-	UCapsuleComponent * VROrigin = nullptr;
+	UCapsuleComponent * Capsule = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	USceneComponent * VROrigin = nullptr;
 
 	UPROPERTY(EditAnywhere)
 	UCameraComponent * VRCamera = nullptr; 
 	
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent * TeleportIndicator = nullptr;
-
-	UPROPERTY()
-	APlayerMotionController * LeftController = nullptr;
-
-	UPROPERTY()
-	APlayerMotionController * RightController = nullptr;
 
 	UPROPERTY(EditAnywhere, Category = "Sound")
 	USoundBase* SoundRight = nullptr;
@@ -55,4 +60,8 @@ protected:
 	void PreTeleport();
 	void PostTeleport();
 	void CancelTeleport();
+
+	void BoatEnter();
+
+	void PositionReset();
 };

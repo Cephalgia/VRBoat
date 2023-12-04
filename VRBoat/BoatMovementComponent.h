@@ -31,6 +31,8 @@ public:
 
 	FVector AngularVelocity;
 
+	bool bStopMovement = false;
+
 protected:
 
 	FVector LastRawVelocity = FVector::ZeroVector;

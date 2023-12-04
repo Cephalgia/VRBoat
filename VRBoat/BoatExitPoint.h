@@ -15,4 +15,16 @@ public:
 	ABoatExitPoint();
 
 	virtual void BeginPlay() override;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY()
+	UBillboardComponent	* BillboardComponent = nullptr;
+	UPROPERTY()
+	UBillboardComponent	* BoatBillboardComponent = nullptr;
+#endif
+	UPROPERTY(EditAnywhere)
+	USceneComponent * BoatStayPoint = nullptr;
+
+	UPROPERTY(EditAnywhere)
+	UStaticMeshComponent * BoatPole = nullptr;
 };

@@ -27,6 +27,11 @@ FVector UBoatMovementComponent::GetRiverFlow() const
 
 void UBoatMovementComponent::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
+	if (bStopMovement)
+	{
+		return;
+	}
+
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	float OldZ = UpdatedComponent->GetComponentLocation().Z;
@@ -104,11 +109,11 @@ void UBoatMovementComponent::TickComponent(float DeltaTime, enum ELevelTick Tick
 
 	FHitResult Hit(1.f);
 	SafeMoveUpdatedComponent(DeltaMove, NewRotation, true, Hit);
-	if (Hit.bBlockingHit)
-	{
-		DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 3.f, 8, FColor::Green, false, 1.f);
-		//UE_LOG(LogTemp, Warning, TEXT("Hit Actor %s"), *Hit.Actor->GetName());
-	}
+	//if (Hit.bBlockingHit)
+	//{
+	//	DrawDebugSphere(GetWorld(), Hit.ImpactPoint, 3.f, 8, FColor::Green, false, 1.f);
+	//	//UE_LOG(LogTemp, Warning, TEXT("Hit Actor %s"), *Hit.Actor->GetName());
+	//}
 	SlideAlongSurface(DeltaMove, (1.f - Hit.Time), Hit.Normal, Hit, true);
 
 	Velocity = Velocity - Flow;
